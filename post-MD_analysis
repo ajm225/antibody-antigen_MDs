@@ -1,8 +1,15 @@
 ## Ayesha ##
 #1. RMSD + RMSF Analysis
+- module load fftw
+- module load gcc
+- module load gromacs-gpu
+
 ## analysis of trajectory files, select "protein" for all comands"
 module load gcc/12.3.0 gromacs-gpu/2024.3
+module load mmmpbsa_env
 gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o Analysis/md_0_1_noPBC.xtc -pbc cluster -center
+
+
 ## the following command will look at the structural stability, choose backbone (optin 4) for least squeare fit and RMSD calculation
 gmx_mpi rms -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd.xvg -tu ns
 gmx_mpi rms -s em.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd_xtal.xvg -tu ns
