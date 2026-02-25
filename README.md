@@ -19,6 +19,7 @@ cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
     #(we use TIP3P water which is compatible with our Amber99SB-ILDN forcefield)
 - gmx_mpi  pdb2gmx -f model.pdb -o model_processed.gro | gmx pdb2gmx -f model.pdb -o model_processed.gro -his |  gmx pdb2gmx -f model.pdb -o model_processed.gro -inter
     #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
+    
     #(in this case is we have to determine the protonation state of histidine)
     #there is not possible to set an specific pH value (for our purposes is going to be 7.4) but it is possible to analyse and 
     #determine all the protonation states of each aminoacid specificly if we analyse them with propka, determine their PKa and 
@@ -109,7 +110,8 @@ cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
 # 16. start MD run pre-processing
 - gmx_mpi grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md_0_1.tpr
     #grep -E "SOL|NA|CL" topol.top (after the minimization you should check that the topology file contains the ions and water molecules yet. the amount of CL, NA ions and water SOL should remain the same before start the MD simulation)
-    
+
+ # 17. Start MD Run   
 #sbatch -p gpu --gres=gpu:a100:2 --mem=100g --time=168:00:00 md.sh 
     #(here we use our md.sh)
     #scontrol show job #ABCDE
