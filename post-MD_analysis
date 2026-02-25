@@ -1,12 +1,14 @@
 ## Ayesha ##
 #1. RMSD + RMSF Analysis
+#RMSD = Root Mean Square Deviation => Overall structural deviation over time compared to a reference structure (time vs deviation)
+#RMSF = Per-residue flexibility over the trajectory (residue index vs fluctuation)
+
 - module load fftw
 - module load gcc
 - module load gromacs-gpu
 
 ## analysis of trajectory files, select "protein" for all comands"
 module load gcc/12.3.0 gromacs-gpu/2024.3
-module load mmmpbsa_env
 gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o Analysis/md_0_1_noPBC.xtc -pbc cluster -center
 
 
@@ -14,6 +16,9 @@ gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o Analysis/md_0_1_noPBC.xtc -pbc cl
 gmx_mpi rms -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd.xvg -tu ns
 gmx_mpi rms -s em.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd_xtal.xvg -tu ns
 gmx_mpi rmsf -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsf.xvg
+
+
+
 
 ##generating differnet index files to analyze RMSD and RMSF separatelly 
 gmx_mpi make_ndx -f md_0_1.gro -o Analysis/index.ndx 
@@ -40,13 +45,15 @@ gmx_mpi rmsf -s md_0_1.tpr -f md_0_1_noPBC1.xtc -n index.ndx -o rmsf_protein1.xv
 
 
 
-#2 MMPBSA - 
+#2 MMPBSA: Molecular Mechanics – Poisson–Boltzmann Surface Area
+# post-processing method used after MD simulations to estimate binding free energy (ΔG_bind) between two molecules 
 
 1. Set up environment (create an mmpbsa environment first if it doesnt exist)
 - module purge
 - module load gcc/13.3.0
 - module load openmpi
 - module load gromacs-gpu/2024.3
+- conda activate mmmpbsa_env
 
 2. Creat MM/PBSA Index File (not in conda env yet)
 - gmx_mpi make_ndx -f md_0_1.tpr -o index_mmpbsa.ndx
