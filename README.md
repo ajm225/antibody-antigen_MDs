@@ -8,17 +8,30 @@
 
 # Running MD Simulations - Test Run 1 - n_ct173_pep7-dk7-model0_MD
 # 1. Set up environment on HPC
+# make sure each of your cluspro docked model.pdb is in the correct folder, named according to the complex
 cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
 - [AMUKHTAR24@kgi.edu@laguna1 n_ct173_pep7-dk7-model0_MD]$ module load gcc
 - [AMUKHTAR24@kgi.edu@laguna1 n_ct173_pep7-dk7-model0_MD]$ module load fftw
 - [AMUKHTAR24@kgi.edu@laguna1 n_ct173_pep7-dk7-model0_MD]$ module load gromacs-gpu
   
 # 2. Set Protonation States
+- # Use propka to get model PKA values
+- python -m propka model.pdb -o 7.4  
+# begin setting protonation states
+- gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -inter
+
+  <img width="1472" height="816" alt="image" src="https://github.com/user-attachments/assets/748902f3-970d-406a-ae93-a6e8999a4c94" />
+
+# pH < pKa → residue is protonated (acidic environment wins, proton stays on)
+# pH > pKa → residue is deprotonated (basic environment wins, proton leaves)
+# e.g. LYS at residue 43 PKA = 9.94; pH(7.4) < pKa (9.94) => protonate 
+  
+# get .gro file
 - gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro (optional)
 - python -m propka model.pdb -o 7.4 (optional)
 - OR python -m propka model.gro -o 7.4 # depends on your starting file, but mostly likely start with the model.pdb version
     #(we use TIP3P water which is compatible with our Amber99SB-ILDN forcefield)
-- gmx_mpi  pdb2gmx -f model.pdb -o model_processed.gro | gmx pdb2gmx -f model.pdb -o model_processed.gro -his |  gmx pdb2gmx -f model.pdb -o model_processed.gro -inter
+- gmx_mpi  pdb2gmx -f model.pdb -o model_processed.gro | gmx pdb2gmx -f model.pdb -o model_processed.gro -his |  gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -inter
     #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
     
     #(in this case is we have to determine the protonation state of histidine)
