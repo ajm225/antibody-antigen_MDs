@@ -15,7 +15,8 @@ cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
   
 # 2. Set Protonation States
 - gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro (optional)
-- python -m propka model.gro -o 7.4 | python -m propka model.pdb -o 7.4 (optional)
+- python -m propka model.pdb -o 7.4 (optional)
+- OR python -m propka model.gro -o 7.4 # depends on your starting file, but mostly likely start with the model.pdb version
     #(we use TIP3P water which is compatible with our Amber99SB-ILDN forcefield)
 - gmx_mpi  pdb2gmx -f model.pdb -o model_processed.gro | gmx pdb2gmx -f model.pdb -o model_processed.gro -his |  gmx pdb2gmx -f model.pdb -o model_processed.gro -inter
     #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
