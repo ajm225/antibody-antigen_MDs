@@ -16,24 +16,18 @@ cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
   
 # 2. Set Protonation States
 - # Use propka to get model PKA values
-- python -m propka model.pdb -o 7.4  
+- python -m propka model.pdb -o 7.4
+- ALTERNATIVE: python -m propka model.pdb -o 7.4 (optional)
 # begin setting protonation states
 - gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -inter
+   - choose #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
 
   <img width="1472" height="816" alt="image" src="https://github.com/user-attachments/assets/748902f3-970d-406a-ae93-a6e8999a4c94" />
 
 # pH < pKa → residue is protonated (acidic environment wins, proton stays on)
 # pH > pKa → residue is deprotonated (basic environment wins, proton leaves)
 # e.g. LYS at residue 43 PKA = 9.94; pH(7.4) < pKa (9.94) => protonate 
-  
-# get .gro file
-- gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro (optional)
-- python -m propka model.pdb -o 7.4 (optional)
-- OR python -m propka model.gro -o 7.4 # depends on your starting file, but mostly likely start with the model.pdb version
-    #(we use TIP3P water which is compatible with our Amber99SB-ILDN forcefield)
-- gmx_mpi  pdb2gmx -f model.pdb -o model_processed.gro | gmx pdb2gmx -f model.pdb -o model_processed.gro -his |  gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -inter
-    #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
-    
+
     #(in this case is we have to determine the protonation state of histidine)
     #there is not possible to set an specific pH value (for our purposes is going to be 7.4) but it is possible to analyse and 
     #determine all the protonation states of each aminoacid specificly if we analyse them with propka, determine their PKa and 
@@ -41,11 +35,20 @@ cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
     #after we analyze with propka at a specific pH "python -m propka model.gro -o 7.4"
     #we shoud use "pdb2gmx -f protein.pdb -inter" and it wil guide us throught each aminoacid to determine their protonation state
     #Once you select all the protonation state if GROMACS ask you for link amoniacids between each other mark no (n)
+  
    #Remember that if you want to neutralize an aminocid you should choose the protonation state that results in an overall charge of 0.
    #This means that If the residue is normally negatively charged (e.g., GLU, ASP) use the protonated form to neutralize it and 
    #If the residue is normally positively charged (e.g., LYS, ARG) use the deprotonated form to neutralize it. So in general if you want a aminaocid neutralized
      #just pay atention to the charge (it has to be 0)
 
+  
+# get .gro file
+- gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro (optional)
+- 
+- OR python -m propka model.gro -o 7.4 # depends on your starting file, but mostly likely start with the model.pdb version
+    #(we use TIP3P water which is compatible with our Amber99SB-ILDN forcefield)
+- gmx_mpi  pdb2gmx -f model.pdb -o model_processed.gro | gmx pdb2gmx -f model.pdb -o model_processed.gro -his |  gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -inter
+    
 # 3. Set Box Size 
  - gmx_mpi editconf -f model_processed.gro -o model_newbox.gro -c -d 1.0 -bt cubic
    
