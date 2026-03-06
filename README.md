@@ -19,8 +19,9 @@ cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
 - python -m propka model.pdb -o 7.4
 - ALTERNATIVE: python -m propka model.pdb -o 7.4 (optional)
 # begin setting protonation states
-- gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -inter
-   - choose #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
+- gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -ignh -inter
+   # choose #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
+   # ignh will ignore the hydrogens, which is important to avoid a fatal error  
 
   <img width="1472" height="816" alt="image" src="https://github.com/user-attachments/assets/748902f3-970d-406a-ae93-a6e8999a4c94" />
 
