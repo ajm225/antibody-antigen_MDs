@@ -43,7 +43,7 @@ cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
      #just pay atention to the charge (it has to be 0)
 
   
-# get .gro file
+# [old commands ignore these]
 - gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro (optional)
 - 
 - OR python -m propka model.gro -o 7.4 # depends on your starting file, but mostly likely start with the model.pdb version
