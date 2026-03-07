@@ -122,14 +122,57 @@ cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
     #density can fluctuate between +-5 kg/m3 which is normal in simulations performed on water. A high density should be around 10>kg/m3
     #in general the NPT ensemble allos the volume to change so the box can fit and reach a target volume. The temperature of the termostat remains (like in a NVT) and the pressure is controlled with a barostat (like Berendsen or Parrinello-Rahman). You will use it to equilibrate the pressure after a NVT. It is used in simulations in which he density is important like fluids, biomolecules in solutions, compressible materials, etc. It is also used to prepare a system befire the final production (stable stage of the molecualr dynamics). Remember this ensemble is used to adjust the pressure and obtain a experimental density.
 
-#if the density or preasure are not stable you can change barostate (pcoupl option in the npt.mdp file). you can use Parrinello-Rahman barostate for long simulations. This barostate is more precise. You can also use Berendsen jsut to stabilize the simulations at the beggining 50-100ps and then change to Parrinello-Rahman, this is becuase Berendsen gets eatable quickly and do not generate realistics physical fluctuations so it should not be used in the production pahse. You can also try higher values of relaxing time (tau_p) values between 2.0 and 5.0 ps so it can soft the pressure range, if the pressure response is slow reduce tau_p to 1.0 to increase the adjust time (but not less than 1.0). The temperature control can also affect density so make sure to use v-rescale or Nose-Hoover (if you use Nose-Hoover use tau_t = 0.5 or greater to avoid exteme fluctuations). If preassure nad density variates a sudently redute the instegration step (dt), the smaller this steps more stable is the simulation but it will be slower. Also revew if the NVT was well executed, if not the NPT can start with high fluctuations. If the energy is not stable execute a longer minimization in between NVT/NPT steps. Remember that preassure fluctuates a lot given the small nuber of molecules in the simulation even in well equililibrated simulations it can variate in +-100bar instantly 
+#if the density or preasure are not stable you can change barostate (pcoupl option in the npt.mdp file). you can use Parrinello-Rahman barostate for long simulations. This barostate is more precise. You can also use Berendsen just to stabilize the simulations at the beggining 50-100ps and then change to Parrinello-Rahman, this is becuase Berendsen gets eatable quickly and do not generate realistics physical fluctuations so it should not be used in the production pahse. You can also try higher values of relaxing time (tau_p) values between 2.0 and 5.0 ps so it can soft the pressure range, if the pressure response is slow reduce tau_p to 1.0 to increase the adjust time (but not less than 1.0). The temperature control can also affect density so make sure to use v-rescale or Nose-Hoover (if you use Nose-Hoover use tau_t = 0.5 or greater to avoid exteme fluctuations). If preassure nad density variates a suddently reduce the integration step (dt), the smaller this steps more stable is the simulation but it will be slower. 
+#Also review if the NVT was well executed, if not the NPT can start with high fluctuations. If the energy is not stable execute a longer minimization in between NVT/NPT steps. Remember that pressure fluctuates a lot given the small nuber of molecules in the simulation even in well equililibrated simulations it can variate in +-100bar instantly 
 
 
 # 16. start MD run pre-processing
 - gmx_mpi grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md_0_1.tpr
     #grep -E "SOL|NA|CL" topol.top (after the minimization you should check that the topology file contains the ions and water molecules yet. the amount of CL, NA ions and water SOL should remain the same before start the MD simulation)
 
- # 17. Start MD Run   
+ # 17a. Set up file system for 150 ns MD Run 
+# since we're running 3 replicate simulations at 150ns, the MD run can be made into an array so that you can submit all 3 jobs at the same time on Laguna. You'll want the parent folder with all of the files generated thus far to stay as is, and then you will create 3 folders, with certain files copied into each folder (one for each replicate). 
+  #  E.g. Folder Structure with Relevant Files:
+    n_ct173_pep7-dk7-model0_MD/
+      rep1_150ns/
+        npt.gro
+        topol.top
+        topol_Protein_chain_H.itp
+        topol_Protein_chain_L.itp
+        topol_Protein_chain_A.itp
+        posre_Protein_chain_H.itp
+        posre_Protein_chain_L.itp
+        posre_Protein_chain_A.itp
+        md_rep1.tpr #<-- this is the md_01.tpr, renamed for this replicate
+      
+      rep2_150ns/
+        npt.gro
+        topol.top
+        topol_Protein_chain_H.itp
+        topol_Protein_chain_L.itp
+        topol_Protein_chain_A.itp
+        posre_Protein_chain_H.itp
+        posre_Protein_chain_L.itp
+        posre_Protein_chain_A.itp
+        md_rep2.tpr
+      
+      rep3_150ns/
+        npt.gro
+        topol.top
+        topol_Protein_chain_H.itp
+        topol_Protein_chain_L.itp
+        topol_Protein_chain_A.itp
+        posre_Protein_chain_H.itp
+        posre_Protein_chain_L.itp
+        posre_Protein_chain_A.itp
+        md_rep3.tpr
+
+
+ # 17b. Set up the Array
+ # create md_array.sh within the parent folder 
+ 
+
+ # 18. Start MD Run
 #sbatch -p gpu --gres=gpu:a100:2 --mem=100g --time=168:00:00 md.sh 
     #(here we use our md.sh)
     #scontrol show job #ABCDE
