@@ -8,34 +8,30 @@
 
 # Running MD Simulations - Test Run 1 - n_ct173_pep7-dk7-model0_MD
 # 1. Set up environment on HPC
-# make sure each of your cluspro docked model.pdb is in the correct folder, named according to the complex
-cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
-- [AMUKHTAR24@kgi.edu@laguna1 n_ct173_pep7-dk7-model0_MD]$ module load gcc
-- [AMUKHTAR24@kgi.edu@laguna1 n_ct173_pep7-dk7-model0_MD]$ module load fftw
-- [AMUKHTAR24@kgi.edu@laguna1 n_ct173_pep7-dk7-model0_MD]$ module load gromacs-gpu
+- make sure each of your cluspro docked model.pdb is in the correct folder, named according to the complex
+    e.g > cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
+# load the right modules (do this everytime you start an HPC session for this!)
+    > module load gcc
+    > module load fftw
+    > module load gromacs-gpu
   
 # 2. Set Protonation States
-- # Use propka to get model PKA values
-- python -m propka model.pdb -o 7.4
-- ALTERNATIVE: python -m propka model.pdb -o 7.4 (optional)
-# begin setting protonation states
-- gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -ignh -inter
-   # choose #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
-   # ignh will ignore the hydrogens, which is important to avoid a fatal error  
+# -  Use propka to get model PKA values
+     > python -m propka model.pdb -o 7.4
+      # ALTERNATIVE: python -m propka model.pdb -o 7.4 (optional)
+# - begin setting protonation states
+     > gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -ignh -inter
+       # choose #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
+       # ignh will ignore the hydrogens, which is important to avoid a fatal error  
 
   <img width="1472" height="816" alt="image" src="https://github.com/user-attachments/assets/748902f3-970d-406a-ae93-a6e8999a4c94" />
 
-# pH < pKa → residue is protonated (acidic environment wins, proton stays on)
-# pH > pKa → residue is deprotonated (basic environment wins, proton leaves)
-# e.g. LYS at residue 43 PKA = 9.94; pH(7.4) < pKa (9.94) => protonate 
-
-    #(in this case is we have to determine the protonation state of histidine)
-    #there is not possible to set an specific pH value (for our purposes is going to be 7.4) but it is possible to analyse and 
-    #determine all the protonation states of each aminoacid specificly if we analyse them with propka, determine their PKa and 
-    #finally see which is the protonation state of each aminoacid at 7.4 pH)
-    #after we analyze with propka at a specific pH "python -m propka model.gro -o 7.4"
-    #we shoud use "pdb2gmx -f protein.pdb -inter" and it wil guide us throught each aminoacid to determine their protonation state
-    #Once you select all the protonation state if GROMACS ask you for link amoniacids between each other mark no (n)
+-  pH < pKa → residue is protonated (acidic environment wins, proton stays on)
+-  pH > pKa → residue is deprotonated (basic environment wins, proton leaves)
+-  e.g. LYS at residue 43 PKA = 9.94; pH(7.4) < pKa (9.94) => protonate 
+  - (in this case is we have to determine the protonation state of histidine)
+  - it is not possible to set an specific pH value (for our purposes is going to be 7.4) but it is possible to analyse and determine all the protonation states of each aminoacid specificly if we analyse them with propka, determine their PKa and finally see which is the protonation state of each aminoacid at 7.4 pH) after we analyze with propka at a specific pH "python -m propka model.gro -o 7.4" we shoud use "pdb2gmx -f protein.pdb -inter" and it wil guide us throught each aminoacid to determine their protonation state.
+  - Once you select all the protonation state if GROMACS ask you for link amoniacids between each other mark no (n)
   
    #Remember that if you want to neutralize an aminocid you should choose the protonation state that results in an overall charge of 0.
    #This means that If the residue is normally negatively charged (e.g., GLU, ASP) use the protonated form to neutralize it and 
@@ -51,25 +47,30 @@ cd /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
 - gmx_mpi  pdb2gmx -f model.pdb -o model_processed.gro | gmx pdb2gmx -f model.pdb -o model_processed.gro -his |  gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -inter
     
 # 3. Set Box Size 
- - gmx_mpi editconf -f model_processed.gro -o model_newbox.gro -c -d 1.0 -bt cubic
+    > gmx_mpi editconf -f model_processed.gro -o model_newbox.gro -c -d 1.0 -bt cubic
    
 # 4. Solvate 
-- gmx_mpi solvate -cp model_newbox.gro -cs spc216.gro -o model_solv.gro -p topol.top 
-    #(SPC216: simple point charge water is a pre-equilibrated box of 216 SPC water molecules and it is used for 3-site water models like TIP3P. The 216SPC is a file that contains 216 molecules of preequilibrated water taht it is used as a start point to fill a simulation box with water, This 216SPC is like a template that is used to fill you box with as much water as it is needed so even if the tmeplate has 216 water molecues of preequilibrated water you box wil not have only 216 water moleucles, your box wil end with thounsands of preequilibrated TIP3P water molecules that comes from the 216SPC file that was used as a template)
+    > gmx_mpi solvate -cp model_newbox.gro -cs spc216.gro -o model_solv.gro -p topol.top 
+- (SPC216: simple point charge water is a pre-equilibrated box of 216 SPC water molecules and it is used for 3-site water models like TIP3P. The 216SPC is a file that contains 216 molecules of preequilibrated water taht it is used as a start point to fill a simulation box with water, This 216SPC is like a template that is used to fill you box with as much water as it is needed so even if the tmeplate has 216 water molecues of preequilibrated water you box wil not have only 216 water moleucles, your box wil end with thounsands of preequilibrated TIP3P water molecules that comes from the 216SPC file that was used as a template)
   
   # use: grep "SOL" topol.top to check if the topology file was updated with the water (SOL) molecules (you should see values once you execute this code, for example SOL 66850)
-- grep SOL topol.top
+      > grep SOL topol.top
   
 # 4. Create .mdp files, starting with ions.mdp
-- nano ions.mdp (optional, to update ions.mdp)
+ - NEED TO LOOK AT MY .mdp FILES ON BOX FOR THIS! We can reuse the same .mdp files for every run here, but its important to check md.mdp everytime because that's where you set the simulation time (currently set to 150ns)
+      # optional, to update ions.mdp copied from previous runs:
+         > nano ions.mdp 
+    
 
 # 5. Generate ions.tpr
-- gmx_mpi grompp -f ions.mdp -c model_solv.gro -p topol.top -o ions.tpr
-    #grep -E "NA|CL|ION" topol.top you should not see any values here because IONS will be added in the next step, this is just ot verify that IONS are not present here and will be added in the next step
+    > gmx_mpi grompp -f ions.mdp -c model_solv.gro -p topol.top -o ions.tpr
+    # OPTIONAL 
+    > grep -E "NA|CL|ION" topol.top 
+    # you should not see any values here because IONS will be added in the next step, this is just ot verify that IONS are not present here and will be added in the next step
 
  # 6. Add ions 
 - gmx_mpi genion -s ions.tpr -o model_solv_ions.gro -p topol.top -pname NA -nname CL -neutral -conc 0.15 
-    # use the option 13 to add the ions (SOL)
+    # use the option 13 (SOL) to add the ions 
     #(gromacs reads the concentration in mol/L and our target is 150mM or 0.15M)
     # use: grep -E "NA|CL" topol.top to check if the topology file was updated (you should see values once you execute this code, for example NA 10 CL 10)
 
