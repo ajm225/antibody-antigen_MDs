@@ -1,5 +1,5 @@
 ## Ayesha ##
-#1. RMSD + RMSF Analysis
+# 1. RMSD + RMSF Analysis
 #RMSD = Root Mean Square Deviation => Overall structural deviation over time compared to a reference structure (time vs deviation)
 #RMSF = Per-residue flexibility over the trajectory (residue index vs fluctuation)
 
