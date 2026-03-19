@@ -3,25 +3,38 @@
 #RMSD = Root Mean Square Deviation => Overall structural deviation over time compared to a reference structure (time vs deviation)
 #RMSF = Per-residue flexibility over the trajectory (residue index vs fluctuation)
 
-- module load fftw
-- module load gcc
-- module load gromacs-gpu
+> module load fftw
+> module load gcc
+> module load gromacs-gpu
 
-## analysis of trajectory files, select "protein" for all comands"
+# per replicate, do the following create an analysis folder
+> mkdir -p Analysis
+
+## analysis of trajectory files, select "protein" for all commands"
 module load gcc/12.3.0 gromacs-gpu/2024.3
-gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o Analysis/md_0_1_noPBC.xtc -pbc cluster -center
+> gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o Analysis/md_0_1_noPBC.xtc -pbc cluster -center
+## per replicate:
+> gmx_mpi trjconv -s md_rep1.tpr -f md_rep1.xtc -o Analysis/rep1_noPBC.xtc -pbc cluster -center
+
+
 
 
 ## the following command will look at the structural stability, choose backbone (optin 4) for least squeare fit and RMSD calculation
-gmx_mpi rms -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd.xvg -tu ns
-gmx_mpi rms -s em.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd_xtal.xvg -tu ns
-gmx_mpi rmsf -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsf.xvg
-
+> gmx_mpi rms -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd.xvg -tu ns
+> gmx_mpi rms -s em.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd_xtal.xvg -tu ns
+> gmx_mpi rmsf -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsf.xvg
+## per replicate:
+> gmx_mpi rms -s md_rep1.tpr -f Analysis/rep1_noPBC.xtc -o Analysis/rmsd.xvg -tu ns
+> gmx_mpi rms -s em.tpr -f Analysis/rep1_noPBC.xtc -o Analysis/rmsd_xtal.xvg -tu ns
+> gmx_mpi rmsf -s md_rep1.tpr -f Analysis/rep1_noPBC.xtc -o Analysis/rmsf.xvg
 
 
 
 ##generating differnet index files to analyze RMSD and RMSF separatelly 
-gmx_mpi make_ndx -f md_0_1.gro -o Analysis/index.ndx 
+> gmx_mpi make_ndx -f md_0_1.gro -o Analysis/index.ndx 
+## per replicate
+> gmx_mpi make_ndx -f md_rep1.gro -o Analysis/index.ndx 
+
 #Review .gro file and atom numbering to select for proper index of protein 1 and protein 2, "a" for atom or "r" for residue
 #Press "q" to save and quit
     #name protein1
