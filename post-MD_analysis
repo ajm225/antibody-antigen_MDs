@@ -3,18 +3,26 @@
 #RMSD = Root Mean Square Deviation => Overall structural deviation over time compared to a reference structure (time vs deviation)
 #RMSF = Per-residue flexibility over the trajectory (residue index vs fluctuation)
 
-> module load fftw
-> module load gcc
-> module load gromacs-gpu
+    > module load fftw
+    > module load gcc
+    > module load gromacs-gpu
 
 # per replicate, do the following create an analysis folder
-> mkdir -p Analysis
+    > mkdir -p Analysis
 
 ## analysis of trajectory files, select "protein" for all commands"
 module load gcc/12.3.0 gromacs-gpu/2024.3
-> gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o Analysis/md_0_1_noPBC.xtc -pbc cluster -center
+    > gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o Analysis/md_0_1_noPBC.xtc -pbc cluster -center
 ## per replicate:
-> gmx_mpi trjconv -s md_rep1.tpr -f md_rep1.xtc -o Analysis/rep1_noPBC.xtc -pbc cluster -center
+    > gmx_mpi trjconv -s md_rep1.tpr -f md_rep1.xtc -o Analysis/rep1_noPBC.xtc -pbc cluster -center
+
+## set atom range numbers instead or residues (since residues restart from 1 everytime)
+e.g. 
+    > a 1-1795
+    
+    Found 1795 atoms in range 1-1795
+    
+    > name 17 Heavy
 
 
 
