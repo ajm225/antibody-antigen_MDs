@@ -1,4 +1,4 @@
-## Ayesha ##
+## AM - UPDATED WITH NOTES##
 # 1. RMSD + RMSF Analysis
 #RMSD = Root Mean Square Deviation => Overall structural deviation over time compared to a reference structure (time vs deviation)
 #RMSF = Per-residue flexibility over the trajectory (residue index vs fluctuation)
@@ -109,12 +109,7 @@ gmx_mpi rmsf -s md_0_1.tpr -f md_0_1_noPBC1.xtc -n index.ndx -o rmsf_protein1.xv
 - gmx_mpi make_ndx -f md_0_1.tpr -o index_mmpbsa.ndx
 
 Output:
-[AMUKHTAR24@kgi.edu@laguna1 n_ct173_pep7-dk7-model0_MD]$ gmx_mpi make_ndx -f md_0_1.tpr -o index_mmpbsa.ndx
-                     :-) GROMACS - gmx make_ndx, 2024.3 (-:
 
-Executable:   /apps/generic/gromacs-gpu/2024.3/bin/gmx_mpi
-Data prefix:  /apps/generic/gromacs-gpu/2024.3
-Working dir:  /home1/AMUKHTAR24@kgi.edu/thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD
 Command line:
   gmx_mpi make_ndx -f md_0_1.tpr -o index_mmpbsa.ndx
 
@@ -171,7 +166,7 @@ Analysing Protein...
 
 
 
-## KAREN ##
+## ORIGINAL ##
 ## Analysis of MD run simulations ###
 
 ## analysis of trajectory files, select "protein" for all comands"
