@@ -1,5 +1,5 @@
-# thesis_MDs
-The following contains steps to run Molecular Dynamics simulations on GROMACS via HPC (Laguna). 
+# antibody-antigen_MDs
+The following contains steps to run Molecular Dynamics simulations on antibody-antigen complexes through GROMACS via HPC (Laguna). 
 
 # 0. Pre-MD Steps
 - Run antibody/antigen complexes on ClusPro
