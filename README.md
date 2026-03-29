@@ -114,17 +114,17 @@ The following contains steps to run Molecular Dynamics simulations on GROMACS vi
 # 11. Check temperature
     >  gmx_mpi energy -f nvt.edr -o temperature.xvg
     #select the option 16 0
-#a variation of +-5K for small systems and +-2K for large systems is perfect!a variation like 10/20K is considered inestable so check on that. If the systems initially fluctuates a lot you can use a Berendsen thermostat in the first 20-50ps and then use V-rescale for the rest of the simulation (v-scale is a better Berdensen version that maintains the temperature with realistic physical fluctuations and avoid non-physical effects it is like using V-rescale instead Berdensen) 
-#You can also reduce the dt of the system if it is tempearture inestable or define the groups (like protein and non-protein groups). Make sure the system is well minimized so it wont start with wierd temperatures (you can execute an extra step of minimization , if there are atomic clashes or non physical interactions the temperature can go up suddently). If the tempeature is not well defined you can generate new thermal velocities with a seed in the nvt.mdp file (using gen-vel = yes, gen-temp = 300 and gen-seed = -1 for example, this can help to reduce initial fluctuations)
+- a variation of +-5K for small systems and +-2K for large systems is perfect!a variation like 10/20K is considered inestable so check on that. If the systems initially fluctuates a lot you can use a Berendsen thermostat in the first 20-50ps and then use V-rescale for the rest of the simulation (v-scale is a better Berdensen version that maintains the temperature with realistic physical fluctuations and avoid non-physical effects it is like using V-rescale instead Berdensen) 
+- You can also reduce the dt of the system if it is tempearture inestable or define the groups (like protein and non-protein groups). Make sure the system is well minimized so it wont start with wierd temperatures (you can execute an extra step of minimization , if there are atomic clashes or non physical interactions the temperature can go up suddently). If the tempeature is not well defined you can generate new thermal velocities with a seed in the nvt.mdp file (using gen-vel = yes, gen-temp = 300 and gen-seed = -1 for example, this can help to reduce initial fluctuations)
 
 # 12. NPT equilibration  
     > gmx_mpi  grompp -f npt.mdp -c nvt.gro -r nvt.gro -t nvt.cpt -p topol.top -o npt.tpr
     
 # 13. Run NPT
     > gmx_mpi mdrun -deffnm npt 
-#(here we will use our npt_ensemble.sh) <--note from ayesha, technically you don't need this, but if you want to develop & run a shell script so that this command still runs even when you close your laptop/get logged out of the SSH, you can ask ChatGPT to help you generate a shell script to do this. If you don't use the shell script, note that it takes a bit of time to run, so don't close your laptop or sign out.
+- (here we will use our npt_ensemble.sh) <--note: technically you don't need this, but if you want to develop & run a shell script so that this command still runs even when you close your laptop/get logged out of the SSH, you can ask ChatGPT to help you generate a shell script to do this. If you don't use the shell script, note that it takes a bit of time to run, so don't close your laptop or sign out.
     #running the shell script:
-     > sbatch <script name>.sh (it has to be executable, if for any case it is not use "chmod +x script.sh and then "dos2unix script.sh")
+   > sbatch <script name>.sh (it has to be executable, if for any case it is not use "chmod +x script.sh and then "dos2unix script.sh")
 
      
       > grep -E "SOL|NA|CL" topol.top 
@@ -145,7 +145,7 @@ The following contains steps to run Molecular Dynamics simulations on GROMACS vi
 - Also review if the NVT was well executed, if not the NPT can start with high fluctuations. If the energy is not stable execute a longer minimization in between NVT/NPT steps. Remember that pressure fluctuates a lot given the small nuber of molecules in the simulation even in well equililibrated simulations it can variate in +-100bar instantly 
 
 
-## [STOP HERE WHILE WE WORK OUT THE SEEDING QUESTION]
+## *** STOP HERE WHILE WE WORK OUT THE SEEDING QUESTION ****
 
 # 16. start MD run pre-processing 
     > gmx_mpi grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md_0_1.tpr
