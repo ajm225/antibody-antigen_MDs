@@ -19,7 +19,7 @@ module load gromacs-gpu/2024.3
 
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
 
-BASE_DIR="/project/animesh_ray_1465/A_Mukhtar/Thesis/md_sims_native/n_ct173_pep7-dk7-model0_MD"
+BASE_DIR="/project/<PATH/TO/YOUR/FILES>"
 REP_DIR="${BASE_DIR}/rep${SLURM_ARRAY_TASK_ID}_150ns"
 DEFFNM="md_rep${SLURM_ARRAY_TASK_ID}"
 
