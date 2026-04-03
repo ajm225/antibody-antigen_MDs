@@ -121,9 +121,13 @@ gmx rms -s protein2_reference.pdb -f fitted.xtc -n index.ndx -o rmsd_protein1.xv
 ------------
 
 ##Generating the Cluster Analysis
-> gmx_mpi trjconv -s md_rep1.tpr -f md_rep1.xtc -o md_rep1.xtc -pbc mol -center -fit rot+trans 
+- gmx_mpi trjconv -s md_rep1.tpr -f md_rep1.xtc -o md_rep1.xtc -pbc mol -center -fit rot+trans 
     #this is nost necesary but just in case. You can use the one in step 51
-gmx cluster -s md_0_1.tpr -f md_0_1_noPBC.xtc -n index.ndx -o clusters.xpm -g cluster.log -dist cluster.xvg -method gromos -cutoff 0.2
+    #NOTE: I skipped the above because I already had noPBC.xtc generated from previous step
+
+> gmx_mpi cluster -s md_rep1.tpr -f rep1_noPBC.xtc -n index.ndx -o clusters.xpm -g cluster.log -dist cluster.xvg -method gromos -cutoff 0.2
+# select 4 for backbone
+
 gmx cluster -s md_0_1.tpr -f md_0_1_noPBC.xtc -o index.xpm -g cluster.log -cl cluster.pdb 
     #if the previous comand to generate the cluster.pdb does not work use this one:
 gmx cluster -s md_0_1.tpr -f cluster.xtc -o cluster.xpm -g cluster.log -cl clusters.pdb -method gromos -cutoff 0.1
@@ -277,7 +281,7 @@ Analysing Protein...
 
 
 
-
+------------------------------------------------------------------------------------
 ## ORIGINAL ##
 ## Analysis of MD run simulations ###
 
