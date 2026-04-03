@@ -86,16 +86,128 @@ gmx_mpi rmsf -s md_0_1.tpr -f md_0_1_noPBC1.xtc -n index.ndx -o rmsf_protein1.xv
 > gmx_mpi trjconv -s md_rep1.tpr -f md_rep1.xtc -o fitted.xtc -pbc mol -center
     #select system (group 0) and then protein (group 1)
 
-> gmx_mpi rms -s model.pdb -f fitted.xtc -n index.ndx -o rmsd_protein1.xvg -tu ns
+#>gmx_mpi rms -s model.pdb -f fitted.xtc -n index.ndx -o rmsd_protein1.xvg -tu ns
     #select your protein from the index (protein 1 and protein 2)
-> gmx_mpi rmsf -s md_rep1.tpr -f rep1_noPBC1.xtc -n index.ndx -o rmsf_protein1.xvg
+# NOTE: ^This one didn't work with antigen because of atom number mismatch --> check with Ka (?), attempt 2:
+--> run this two separate times:
+> gmx_mpi rms -s md_rep1.tpr -f fitted.xtc -n index.ndx -o rmsd_protein1.xvg -tu ns
+run 1:     
+- protein 1: antibody 
+- protein 2: antigen
+
+Run 2:
+- protein 1: antibody backbone
+- protein 2: antigen backbone
+
+
+> gmx_mpi rmsf -s md_rep1.tpr -f rep1_noPBC.xtc -n index.ndx -o rmsf_protein1.xvg
     #select your protein from the index (protein 1 and protein 2)
 
 
+#####if for some reason this produce an error try this instead (spliting the model.pdb in 2 per protein, this should not be needed and typically generates more errors)
+gmx editconf -f model.pdb -o protein1_reference.pdb -n index.ndx
+    #select atoms1
+gmx rms -s protein1_reference.pdb -f fitted.xtc -n index.ndx -o rmsd_protein1.xvg
+    #select atoms
+    #select atoms1
+gmx editconf -f model.pdb -o protein2_reference.pdb -n index.ndx
+    #select atoms2
+gmx rms -s protein2_reference.pdb -f fitted.xtc -n index.ndx -o rmsd_protein1.xvg
+    #select atoms2
+    #select atoms2
 
 
 
-#2 MMPBSA: Molecular Mechanics – Poisson–Boltzmann Surface Area
+------------
+
+##Generating the Cluster Analysis
+> gmx_mpi trjconv -s md_rep1.tpr -f md_rep1.xtc -o md_rep1.xtc -pbc mol -center -fit rot+trans 
+    #this is nost necesary but just in case. You can use the one in step 51
+gmx cluster -s md_0_1.tpr -f md_0_1_noPBC.xtc -n index.ndx -o clusters.xpm -g cluster.log -dist cluster.xvg -method gromos -cutoff 0.2
+gmx cluster -s md_0_1.tpr -f md_0_1_noPBC.xtc -o index.xpm -g cluster.log -cl cluster.pdb 
+    #if the previous comand to generate the cluster.pdb does not work use this one:
+gmx cluster -s md_0_1.tpr -f cluster.xtc -o cluster.xpm -g cluster.log -cl clusters.pdb -method gromos -cutoff 0.1
+
+    #This for the system in general
+    #I selected the Carbon alpha or backbone, the protein choice takes a lot of time so the system wil kill it
+    #I seelcted alpha carbon or backbone for the output as well
+    #In case this is not ok delete the index fiel from the code line (it shoud not be a problen becuase here you are analysing all the system but just in case)
+
+#########Generating images suring the molecualr dynamics run
+  for t in {0..100000..1000}; do           #0..100000..1000 means from 0 to 100000ps every 1000ps of snapshot
+      gmx trjconv -s md_0_1.tpr -f md_0_1_noPBC.xtc -n index.ndx -o snapshot_${t}ps.pdb -dump $t
+  done
+     #then select the numbers to evaluate if you want the protein (1) or the system (0), etc
+#it is possible to also use this will print 1 or 17 or the needed number several times (the ones that you need)
+    for t in {0..100000..1000}; do
+        echo "Processing time $t ps...";
+        printf "17\n" | gmx trjconv -s md_0_1.tpr -f md_0_1_noPBC.xtc -n index.ndx -o snapshot_${t}ps.pdb -dump $t; done
+    done 
+
+#this will generate different .pdb files that can be joint using is a single one using: 
+cat snapshot1.pdb snapshot2.pdb snapshot3.pdb > combined_snapshots.pdb
+#here is an automatic way to combine al the generated snapshots in one .pdb file:
+
+    output_file="combined_snapshots.pdb"
+    > $output_file  # Clear the output file if it exists
+
+    for pdb_file in snapshot_*ps.pdb; do
+        echo "Adding $pdb_file to $output_file..."
+        echo "MODEL $(basename $pdb_file .pdb | grep -o '[0-9]*')" >> $output_file
+        cat "$pdb_file" >> $output_file
+        echo "ENDMDL" >> $output_file
+    done
+
+#If you upload each snapshot separatelly and combine them in pymol, then aligned them to generate a superimpose picture with all the snapshots
+#it seems there is no automatic way to do this, so you will have to do it manually in pymol or try to find a pymol script
+
+
+
+-----------------------------
+
+#Interaction analysis
+#you can just se the interaction_analysis.py file to generate the heatmaps of intercation and the index file for the analysis in gromacs
+#(pair wise analysis, minimun distance interaction and number of hydrogen bonds). 
+#for this analysis always use the md_0_1.xtc (it is going to be that file every time you want to generate a heatmail with MDAnalysis in python, do nto use the md_0_1_noPBC,xtc)
+#here you will generate a interacting_residues_cogs.ndx which is an index file that separates only the residues (for each protein) that are interacting between these 2 proteins
+#below an specific cutof porint (normaly below 5A), whit this index file oyu can perform the minimun distance, pariwise distance and number of hidrogen bonds analysis in GROMACS
+
+#minimun distance 
+gmx mindist -s md_0_1.tpr -f md_0_1.xtc -n interacting_residues_cogs.ndx -od mindist.xvg -on num_contact.xvg -d 0.5
+     #the interacting_residues_cogs.ndx is the ndx file generated in the interaction_analysis.py, the -d is the distance in nm
+
+#pairwise distance
+gmx pairdist -s md_0_1.tpr -f md_0_1.xtc -n interacting_residues_cogs.ndx -o pairdist.xvg -ref Interacting_Protein1 -sel Interacting_Protein2
+     #-ref Interacting_Protein1 -sel Interacting_Protein2 were determined in interacting_residues_cogs.ndx
+
+#Hidrogen bonds
+gmx hbond -s md_0_1.tpr -f md_0_1_noPBC1.xtc -n interacting_residues_cogs.ndx -num hbondsnew.xvg
+     #this tells you the number of hidrogen bonds present in the interactions. 
+
+#It is posible to perform a salt bridge analysis, the code is in interaction_analysis.py
+
+
+#secondary structure analysis
+gmx dssp -f md_0_1.xtc -s md_0_1.tpr -o structure.xvg -num numstruc.xvg
+    #This will generate a .dat file that wil be used in the python script to generate the secondary structure map to see the change of secondary structures along time
+
+#MMPBSA analysis 
+   #First the groups have to be wel deifned in the index file
+
+module load gromacs
+module load gmx_mmpbsa
+   #load both modules (gromacs and gmx_mmbpsa) at the same time
+
+gmx_MMPBSA --create_input gb 
+    #this is to generate a mmbpsa.in file
+
+gmx_MMPBSA -i mmpbsa.in -cs md_0_1.tpr -ct md_0_1.xtc -ci indexfinal3.ndx -cg 17 18 -o results_mmpbsa.dat -eo results_mmpbsa.csv
+   #in this comand the numbers 17 and 18 are the receptor and ligand repectively. Both have to be specified in this commandline
+
+#for now it seems it only works with leaprc.protein.ff14SB forcefield, I could not run it with AMBER or Amber99SB-ILDN forcefields, maybe try Amber
+
+
+///MMPBSA: Molecular Mechanics – Poisson–Boltzmann Surface Area
 # post-processing method used after MD simulations to estimate binding free energy (ΔG_bind) between two molecules 
 
 1. Set up environment (create an mmpbsa environment first if it doesnt exist)
