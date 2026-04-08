@@ -1,5 +1,5 @@
 # antibody-antigen_MDs
-The following contains steps to run Molecular Dynamics simulations on antibody-antigen complexes through GROMACS via HPC (Laguna). 
+The following contains steps to run Molecular Dynamics simulations on antibody-antigen complexes through GROMACS via HPC (Laguna). This version takes into account random seeding for replicates for enhanced reproducability. 
 
 # 0. Pre-MD Steps
 - Run antibody/antigen complexes on ClusPro
@@ -22,7 +22,8 @@ The following contains steps to run Molecular Dynamics simulations on antibody-a
 # 2. Set Protonation States
     # Use propka to get model PKA values
          > python -m propka model.pdb -o 7.4
-          # ALTERNATIVE: python -m propka model.gro -o 7.4 # depends on your starting file, but mostly likely start with the model.pdb version
+          # ALTERNATIVE: python -m propka model.gro -o 7.4 # depends on your starting file, but mostly likely 
+          start with the model.pdb version
     # begin setting protonation states
          > gmx_mpi pdb2gmx -f model.pdb -o model_processed.gro -ignh -inter
            # choose #6 (for Amber99SB-ILDN forcefield) and 1 (for TIP3P water)
@@ -54,7 +55,7 @@ The following contains steps to run Molecular Dynamics simulations on antibody-a
       > grep SOL topol.top
   
 # 4. Create .mdp files, starting with ions.mdp
- - LOOK AT .mdp Files uploaded here on this GitHub repo (and verify with successful runs previously completed on Box)
+ - Look at .mdp Files uploaded here on this GitHub repo (and verify with successful runs previously completed on Box)
  - We can reuse the same .mdp files for every run here, but its important to check md.mdp everytime because that's where you set the simulation time (currently set to 150ns)
       # optional, to update ions.mdp copied from previous runs:
          > nano ions.mdp 
@@ -145,7 +146,7 @@ The following contains steps to run Molecular Dynamics simulations on antibody-a
 - Also review if the NVT was well executed, if not the NPT can start with high fluctuations. If the energy is not stable execute a longer minimization in between NVT/NPT steps. Remember that pressure fluctuates a lot given the small nuber of molecules in the simulation even in well equililibrated simulations it can variate in +-100bar instantly 
 
 
-## *** STOP HERE WHILE WE WORK OUT THE SEEDING QUESTION ****
+
 
 # 16. start MD run pre-processing 
     > gmx_mpi grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md_0_1.tpr
