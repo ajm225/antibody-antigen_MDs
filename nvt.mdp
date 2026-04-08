@@ -38,4 +38,5 @@ pbc                     = xyz       ; 3-D PBC
 ; Velocity generation
 gen_vel                 = yes       ; assign velocities from Maxwell distribution
 gen_temp                = 300       ; temperature for Maxwell distribution
-gen_seed                = -1        ; generate a random seed
+gen_seed                = GEN_SEED  ; GEN_SEED = placeholder for randomly set gen_seed val, set by SLURM array script
+ld_seed                 = LD_SEED   ; LD_SEED = placeholder for randomly set LD_Seed val, set by SLURM array script
