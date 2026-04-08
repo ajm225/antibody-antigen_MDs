@@ -52,5 +52,5 @@ pbc                     = xyz       ; 3-D PBC
 DispCorr                = EnerPres  ; account for cut-off vdW scheme
 
 ; Velocity generation
-continuation            = yes       ; contnue from before
+continuation            = yes       ; continue from before
 gen_vel                 = no
