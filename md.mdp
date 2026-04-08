@@ -1,6 +1,6 @@
 ; Run parameters
 integrator              = md        ; leap-frog integrator
-nsteps                  = 75000000  ; 0.002ps * 75,000,0000 = 150,000 ps (150 ns)
+nsteps                  = 150000000 ; 0.002 ps * 150,000,000 = 300,000 ps (300 ns)
 dt                      = 0.002     ; 2 fs
 
 
@@ -16,7 +16,6 @@ compressed-x-grps       = System    ; save the whole system
 nstcheckpoint           = 5000      ; write checkpoint every 5000 steps (~10 ps)
 
 ; Bond parameters
-continuation            = no        ; start independent production trajectory
 constraint_algorithm    = lincs     ; holonomic constraints 
 constraints             = h-bonds   ; bonds involving H are constrained
 lincs_iter              = 1         ; accuracy of LINCS
@@ -53,5 +52,5 @@ pbc                     = xyz       ; 3-D PBC
 DispCorr                = EnerPres  ; account for cut-off vdW scheme
 
 ; Velocity generation
-gen_vel                 = yes       ; Velocity generation is ON
-gen_seed                = -1        ;
+continuation            = yes       ; contnue from before
+gen_vel                 = no
