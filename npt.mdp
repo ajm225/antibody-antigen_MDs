@@ -1,4 +1,4 @@
-title                   = OPLS Lysozyme NPT equilibration 
+title                   = OPLS Antibody/Antigen NPT equilibration 
 define                  = -DPOSRES  ; position restrain the protein
 ; Run parameters
 integrator              = md        ; leap-frog integrator
@@ -10,7 +10,6 @@ nstvout                 = 500       ; save velocities every 1.0 ps
 nstenergy               = 500       ; save energies every 1.0 ps
 nstlog                  = 500       ; update log file every 1.0 ps
 ; Bond parameters
-continuation            = yes       ; Restarting after NVT 
 constraint_algorithm    = lincs     ; holonomic constraints 
 constraints             = h-bonds   ; bonds involving H are constrained
 lincs_iter              = 1         ; accuracy of LINCS
@@ -42,3 +41,5 @@ refcoord_scaling        = com
 pbc                     = xyz       ; 3-D PBC
 ; Velocity generation
 gen_vel                 = no        ; Velocity generation is off 
+continuation            = yes       ; restarting after NVT
+
