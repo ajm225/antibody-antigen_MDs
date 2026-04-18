@@ -1,5 +1,6 @@
 # antibody-antigen_MDs
 The following contains steps to run Molecular Dynamics simulations on antibody-antigen complexes through GROMACS via HPC (Laguna). This version takes into account random seeding for replicates for enhanced reproducability. 
+Note that the random seeding for replicates becomes relevant after steps 0-8. You will adjust random seeding for replicates starting with the NVT 
 
 # 0. Pre-MD Steps
 - Run antibody/antigen complexes on ClusPro
@@ -81,11 +82,11 @@ The following contains steps to run Molecular Dynamics simulations on antibody-a
 
  # 8. Run minimization 
     > gmx_mpi mdrun -v -deffnm em 
-    #(here we wil use our energy_minimization.sh) <--note from ayesha, technically you don't need this, but if you want to develop & run a shell script so that this command still runs even when you close your laptop/get logged out of the SSH, you can ask ChatGPT to help you generate a shell script to do this. If you don't use the shell script, note that it takes a bit of time to run, so don't close your laptop or sign out.
+    #(here we wil use our energy_minimization.sh) <--note: technically you don't need this, but if you want to develop & run a shell script so that this command still runs even when you close your laptop/get logged out of the SSH, you can ask ChatGPT to help you generate a shell script to do this. If you don't use the shell script, note that it takes a bit of time to run, so don't close your laptop or sign out.
     # running the shell script:
     > sbatch <script name>.sh (it has to be executable, if for any case it is not use "chmod +x script.sh and then "dos2unix script.sh")
     
-- This energy minimization step is used to delete tensions or atomic clashesbefore starting a molecular dynamics.
+- This energy minimization step is used to delete tensions or atomic clashes before starting a molecular dynamics simulation.
 - In a protein at the beggining the initial stucture can have atoms very lose to each other or tense bonds which generates high forces, this can produce a unestable simulation. We will eliminate clashes, reduce extremely high forces in bonds and angles, stabilize the molecular geometry and generate a soft beggining for the NVP/NPT ensembles.
 - This algorithm adjust the positions of the atoms to reduce the potential energy of the system using algoritms like: Steepest Descend (goes in the steepest direction in which the energy gets reduced, it is fast and robust but not very precise and it gets used in the first part of the minimization), Conjugate gradient (cg) more precise but slower, it is used after the steep if the system still having high forces. L-BFGS which is more efficient in small systems or with low dimentionallity. If the systems gets stable it means it is ready for the NVT/NPT ensemble andalso for the molecular dynamics.
 
@@ -103,8 +104,59 @@ The following contains steps to run Molecular Dynamics simulations on antibody-a
 - You can use constrain in hidrogen bond (constrains = h-bond) if the forces are very high, this will reduce extreme movements of the hidrogen bonds which can stabilize the minimization.
 - Check on possible atomic clashes, if there are overlapping atoms the minimization will fail (if you see a high Fmax (>10⁵ kJ/mol·nm) you can move the moleucles a bit with gmc editconf with "gmx editconf -f sistema.gro -o sistema_shifted.gro -translate 0.1 0.1 0.1" this can separate the overlaping atoms). Verify the topology, verify if there are atoms with charges or incorrect radius, for example you have 5000 SOL molecules after gmx solvate, make sure that number is correct. Make sure the parameters of the forcefield are correct in the gmx pdb2gmx, correct all the warings in atoms or bonds before minimize.   
 
-# 9. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr)
-     > gmx_mpi grompp -f nvt.mdp -c em.gro -r em.gro -p topol.top -o nvt.tpr
+# 9a. RANDOM SEED GENERATION FOLDER SET-UP: 
+- IMPORTANT: This step sets up the exact folder names for the different replicates so that you can keep track of per-repicate files after this step. You should have a primary folder with the files generated for the complex so far, followed by the individual folders (nested within the primary folder) for each replicate. See below for an example folder structure setup. 
+-     n_ct173_pep7-dk7-model0_MD/
+          em.gro
+          topol.top
+          index.ndx
+          topol_Protein_chain_H.itp
+          topol_Protein_chain_L.itp
+          topol_Protein_chain_A.itp
+          posre_Protein_chain_H.itp
+          posre_Protein_chain_L.itp
+          posre_Protein_chain_A.itp
+          nvt_template.mdp
+          npt.mdp
+          md.mdp
+    
+          rep1_300ns/
+            nvt.mdp
+            nvt.tpr
+            nvt.gro
+            nvt.cpt
+            npt.tpr
+            npt.gro
+            npt.cpt
+            md_300ns.tpr
+        
+          rep2_300ns/
+            nvt.mdp
+            nvt.tpr
+            nvt.gro
+            nvt.cpt
+            npt.tpr
+            npt.gro
+            npt.cpt
+            md_300ns.tpr
+        
+          rep3_300ns/
+            nvt.mdp
+            nvt.tpr
+            nvt.gro
+            nvt.cpt
+            npt.tpr
+            npt.gro
+            npt.cpt
+            md_300ns.tpr
+
+
+# 9b. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE). Use the nvt.mdp file attached, which now accomodates for random seed generation per replicate.
+Note: You will have to run this step separately per replicate. Make sure to set the correct working directory (corresponding to the right replicate folder) each time so that the files are in the correct place. 
+        
+        > gmx_mpi grompp -f nvt.mdp -c em.gro -r em.gro -p topol.top -o nvt_rep1.tpr
+        > gmx_mpi grompp -f nvt.mdp -c em.gro -r em.gro -p topol.top -o nvt_rep2.tpr
+        > gmx_mpi grompp -f nvt.mdp -c em.gro -r em.gro -p topol.top -o nvt_rep3.tpr
 
 # 10. Run NVT
     > gmx_mpi mdrun -deffnm nvt 
