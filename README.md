@@ -119,47 +119,21 @@ Note that the random seeding for replicates becomes relevant after steps 0-8. Yo
           nvt_template.mdp
           npt.mdp
           md.mdp
+          nvt_reps.sh
     
           rep1_300ns/
-            nvt.mdp
-            nvt.tpr
-            nvt.gro
-            nvt.cpt
-            npt.tpr
-            npt.gro
-            npt.cpt
-            md_300ns.tpr
-        
           rep2_300ns/
-            nvt.mdp
-            nvt.tpr
-            nvt.gro
-            nvt.cpt
-            npt.tpr
-            npt.gro
-            npt.cpt
-            md_300ns.tpr
-        
           rep3_300ns/
-            nvt.mdp
-            nvt.tpr
-            nvt.gro
-            nvt.cpt
-            npt.tpr
-            npt.gro
-            npt.cpt
-            md_300ns.tpr
 
 
-# 9b. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE). Use the nvt.mdp file attached, which now accomodates for random seed generation per replicate.
-Note: You will have to run this step separately per replicate. Make sure to set the correct working directory (corresponding to the right replicate folder) each time so that the files are in the correct place. 
+# 9b. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE). Use the nvt_template.mdp & nvt_randseed_reps.sh shell script attached, which now accomodates for random seed generation per replicate.
+Note: This step should automatically place the files in the correct folders.  
         
-        > gmx_mpi grompp -f nvt.mdp -c em.gro -r em.gro -p topol.top -o nvt_rep1.tpr
-        > gmx_mpi grompp -f nvt.mdp -c em.gro -r em.gro -p topol.top -o nvt_rep2.tpr
-        > gmx_mpi grompp -f nvt.mdp -c em.gro -r em.gro -p topol.top -o nvt_rep3.tpr
+    > sbatch nvt_randseed_reps.sh
 
 # 10. Run NVT
     > gmx_mpi mdrun -deffnm nvt 
+    
 - this ensemble maintains a fixed volume (the simulation box does not change its size) the temperature gets cosntant through a thermostate like Berendsen, Nose-Hoover or V-rescale. It will equilibrate the temperature before going into the NPT ensemble or when you want to study processes in whihc the volume does not change (simulations in water boxes) or systems in whihc the pressure is not relevant (Remember thsi is used to adjust the temperature with studies at a fixed volume)
 - You can generate the nvt using a shell script (to ensure that the files are use our nvt_ensemble.sh
 > grep -E "SOL|NA|CL" topol.top (after the minimization you should check that the topology file contains the ions and water molecules yet. the amount of CL, NA ions and water SOL should remain the same after the NVT ensemble)
