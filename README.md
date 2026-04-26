@@ -104,7 +104,7 @@ Note that the random seeding for replicates becomes relevant after steps 0-8. Yo
 - You can use constrain in hidrogen bond (constrains = h-bond) if the forces are very high, this will reduce extreme movements of the hidrogen bonds which can stabilize the minimization.
 - Check on possible atomic clashes, if there are overlapping atoms the minimization will fail (if you see a high Fmax (>10⁵ kJ/mol·nm) you can move the moleucles a bit with gmc editconf with "gmx editconf -f sistema.gro -o sistema_shifted.gro -translate 0.1 0.1 0.1" this can separate the overlaping atoms). Verify the topology, verify if there are atoms with charges or incorrect radius, for example you have 5000 SOL molecules after gmx solvate, make sure that number is correct. Make sure the parameters of the forcefield are correct in the gmx pdb2gmx, correct all the warings in atoms or bonds before minimize.   
 
-# 9a. RANDOM SEED GENERATION FOLDER SET-UP: 
+# 9. RANDOM SEED GENERATION FOLDER SET-UP: 
 - IMPORTANT: This step sets up the exact folder names for the different replicates so that you can keep track of per-repicate files after this step. You should have a primary folder with the files generated for the complex so far, followed by the individual folders (nested within the primary folder) for each replicate. See below for an example folder structure setup. 
 -     n_ct173_pep7-dk7-model0_MD/
           em.gro
@@ -126,29 +126,36 @@ Note that the random seeding for replicates becomes relevant after steps 0-8. Yo
           rep3_300ns/
 
 
-# 9b. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE). Use the nvt_template.mdp & nvt_randseed_reps.sh shell script attached, which now accomodates for random seed generation per replicate.
-Note: This step should automatically place the files in the correct folders.  
-        
-    > sbatch nvt_randseed_reps.sh
+# 10. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE using ARRAY) & run NVT. Use the nvt_template.mdp & nvt_randseed_reps.sh shell script attached, which now accomodates for random seed generation per replicate.
+Note: This step should automatically place the files in the correct folders. 
 
-# 10. Run NVT
-    > gmx_mpi mdrun -deffnm nvt 
+NVT is executed per replicate using the Slurm array script (nvt_reps.sh). Each array task runs grompp and mdrun for one replicate, generating replicate-specific outputs (nvt.tpr, nvt.gro, nvt.cpt, nvt.edr) inside each replicate folder.
+        
+    > sbatch nvt_reps.sh
     
 - this ensemble maintains a fixed volume (the simulation box does not change its size) the temperature gets cosntant through a thermostate like Berendsen, Nose-Hoover or V-rescale. It will equilibrate the temperature before going into the NPT ensemble or when you want to study processes in whihc the volume does not change (simulations in water boxes) or systems in whihc the pressure is not relevant (Remember thsi is used to adjust the temperature with studies at a fixed volume)
-- You can generate the nvt using a shell script (to ensure that the files are use our nvt_ensemble.sh
-> grep -E "SOL|NA|CL" topol.top (after the minimization you should check that the topology file contains the ions and water molecules yet. the amount of CL, NA ions and water SOL should remain the same after the NVT ensemble)
 
-# 11. Check temperature
+  > grep -E "SOL|NA|CL" topol.top
+
+(after the minimization you should check that the topology file contains the ions and water molecules yet. the amount of CL, NA ions and water SOL should remain the same after the NVT ensemble)
+
+# 11. Check temperature PER REPLICATE FOLDER. Change working directory to each replicate separately, and run this command separately per folder.
     >  gmx_mpi energy -f nvt.edr -o temperature.xvg
     #select the option 16 0
+    
 - a variation of +-5K for small systems and +-2K for large systems is perfect!a variation like 10/20K is considered inestable so check on that. If the systems initially fluctuates a lot you can use a Berendsen thermostat in the first 20-50ps and then use V-rescale for the rest of the simulation (v-scale is a better Berdensen version that maintains the temperature with realistic physical fluctuations and avoid non-physical effects it is like using V-rescale instead Berdensen) 
-- You can also reduce the dt of the system if it is tempearture inestable or define the groups (like protein and non-protein groups). Make sure the system is well minimized so it wont start with wierd temperatures (you can execute an extra step of minimization , if there are atomic clashes or non physical interactions the temperature can go up suddently). If the tempeature is not well defined you can generate new thermal velocities with a seed in the nvt.mdp file (using gen-vel = yes, gen-temp = 300 and gen-seed = -1 for example, this can help to reduce initial fluctuations)
+- You can also reduce the dt of the system if it is temperature unstable or define the groups (like protein and non-protein groups). Make sure the system is well minimized so it wont start with wierd temperatures (you can execute an extra step of minimization , if there are atomic clashes or non physical interactions the temperature can go up suddently). If the tempeature is not well defined you can generate new thermal velocities with a seed in the nvt.mdp file (using gen-vel = yes, gen-temp = 300 and gen-seed = -1 for example, this can help to reduce initial fluctuations)
 
-# 12. NPT equilibration  
+# 12. NPT equilibration PER REPLICATE 
+This step must be run separately for each replicate using that replicate’s nvt.gro and nvt.cpt. Make sure to change the working directory per replicate before running this command, so that the correct files are used per replicate.
+
     > gmx_mpi  grompp -f npt.mdp -c nvt.gro -r nvt.gro -t nvt.cpt -p topol.top -o npt.tpr
     
-# 13. Run NPT
+# 13. Run NPT PER REPLICATE
+Again, change the working directory per replicate (for each folder), then run this command in order to get accurate NPT per replicate:
+
     > gmx_mpi mdrun -deffnm npt 
+    
 - (here we will use our npt_ensemble.sh) <--note: technically you don't need this, but if you want to develop & run a shell script so that this command still runs even when you close your laptop/get logged out of the SSH, you can ask ChatGPT to help you generate a shell script to do this. If you don't use the shell script, note that it takes a bit of time to run, so don't close your laptop or sign out.
     #running the shell script:
    > sbatch <script name>.sh (it has to be executable, if for any case it is not use "chmod +x script.sh and then "dos2unix script.sh")
@@ -157,12 +164,16 @@ Note: This step should automatically place the files in the correct folders.
       > grep -E "SOL|NA|CL" topol.top 
 #(after the minimization you should check that the topology file contains the ions and water molecules yet. the amount of CL, NA ions and water SOL should remain the same after the NPT ensemble)
 
-# 14. check pressure
+# 14. Check pressure per replicate
+Again, change to the correct working directory per replicate before running the command. 
+
     >  gmx_mpi energy -f npt.edr -o pressure.xvg
     #select the option 18 0
 #Pressure can range between +-100 bar because the instnat pressure have high fluctuations in the molecualr dynamics. It is a red flag if the pressure is outside of the target consistently
 
-# 15. check density
+# 15. Check density per replicate
+Again, change to the correct working directory per replicate before running the command. 
+
     > gmx_mpi energy -f npt.edr -o density.xvg
         #select the option 24 0
 - density can fluctuate between +-5 kg/m3 which is normal in simulations performed on water. A high density should be around 10>kg/m3
@@ -174,57 +185,18 @@ Note: This step should automatically place the files in the correct folders.
 
 
 
-# 16. start MD run pre-processing 
+# 16. start MD run pre-processing PER REPLICATE
+Again, change to the correct working directory per replicate before running the command. 
+
     > gmx_mpi grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md_0_1.tpr
     > grep -E "SOL|NA|CL" topol.top 
 - (after the minimization you should check that the topology file contains the ions and water molecules yet. the amount of CL, NA ions and water SOL should remain the same before start the MD simulation)
 
- # 17a. Set up file system for 150 ns MD Run 
-Since we're running 3 replicate simulations at 150ns, the MD run can be made into an array so that you can submit all 3 jobs at the same time on Laguna. You'll want the parent folder with all of the files generated thus far to stay as is, and then you will create 3 folders, with certain files copied into each folder (one for each replicate). 
-  #  E.g. Folder Structure with Relevant Files:
-    n_ct173_pep7-dk7-model0_MD/
-      rep1_150ns/
-        npt.gro
-        topol.top
-        topol_Protein_chain_H.itp
-        topol_Protein_chain_L.itp
-        topol_Protein_chain_A.itp
-        posre_Protein_chain_H.itp
-        posre_Protein_chain_L.itp
-        posre_Protein_chain_A.itp
-        md_rep1.tpr #<-- this is the md_01.tpr, renamed for this replicate
-      
-      rep2_150ns/
-        npt.gro
-        topol.top
-        topol_Protein_chain_H.itp
-        topol_Protein_chain_L.itp
-        topol_Protein_chain_A.itp
-        posre_Protein_chain_H.itp
-        posre_Protein_chain_L.itp
-        posre_Protein_chain_A.itp
-        md_rep2.tpr
-      
-      rep3_150ns/
-        npt.gro
-        topol.top
-        topol_Protein_chain_H.itp
-        topol_Protein_chain_L.itp
-        topol_Protein_chain_A.itp
-        posre_Protein_chain_H.itp
-        posre_Protein_chain_L.itp
-        posre_Protein_chain_A.itp
-        md_rep3.tpr
 
-
- # 17b. Set up the Array
- # create md_array.sh within the parent folder 
  
 
- # 18. Start MD Run
-#sbatch -p gpu --gres=gpu:a100:2 --mem=100g --time=168:00:00 md.sh 
-    #(here we use our md.sh)
-    #scontrol show job #ABCDE
-    #scancel ABCDE
+ # 17. Start MD Run
+Run production MD separately for each replicate within its respective folder.
 
+    > gmx_mpi mdrun -deffnm md_300ns
 
