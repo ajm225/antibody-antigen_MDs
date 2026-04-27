@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #SBATCH --job-name=md_300ns_reps
 #SBATCH --partition=compute
 #SBATCH --ntasks=1
@@ -8,36 +9,33 @@
 #SBATCH --array=1-3%1
 #SBATCH --output=logs/%x_%A_%a.out
 
-###############################################
-# LOAD MODULES
-###############################################
+set -e
+
 module load gcc
 module load fftw
 module load gromacs-gpu
 
-###############################################
-# DEFINE REPLICATE
-###############################################
 REP=${SLURM_ARRAY_TASK_ID}
-REP_DIR="rep${REP}_300ns"
+
+if [ -z "$REP" ]; then
+    echo "ERROR: SLURM_ARRAY_TASK_ID is not set."
+    exit 1
+fi
+
+REP_DIR="rep${REP}"
 
 echo "========================================"
-echo "Starting MD for ${REP_DIR}"
+echo "Starting 300 ns MD for ${REP_DIR}"
 echo "Start time: $(date)"
 echo "========================================"
 
-###############################################
-# MOVE INTO REPLICATE DIRECTORY
-###############################################
 cd ${REP_DIR}
 
-###############################################
-# RUN PRODUCTION MD
-###############################################
-gmx_mpi mdrun -deffnm md_300ns
+# Your Step 16 creates md.tpr, so use -s md.tpr
+# -deffnm md_300ns names the outputs md_300ns.xtc, md_300ns.edr, etc.
+gmx_mpi mdrun -s md.tpr -deffnm md_300ns
 
-###############################################
-# FINISH
-###############################################
-echo "Finished ${REP_DIR}"
+echo "========================================"
+echo "Finished 300 ns MD for ${REP_DIR}"
 echo "End time: $(date)"
+echo "========================================"
