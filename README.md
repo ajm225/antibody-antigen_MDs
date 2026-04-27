@@ -154,8 +154,9 @@ Note that the random seeding for replicates becomes relevant after steps 0-8. Yo
                   npt.mdp
 
 
-# 10. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE using ARRAY) & run NVT. Use the nvt_template.mdp & nvt_randseed_reps.sh shell script attached, which now accomodates for random seed generation per replicate. Run this from the 300ns folder, and it should place the files in each replicate folder, respectively.
-Note: This step should automatically place the files in the correct folders. 
+# 10. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE using ARRAY) & run NVT. 
+Use the nvt_template.mdp & nvt_reps.sh shell script attached, which now accomodates for random seed generation per replicate. Run this from the 300ns folder, and it should place the files in each replicate folder, respectively.
+
 
 NVT is executed per replicate using the Slurm array script (nvt_reps.sh). Each array task runs grompp and mdrun for one replicate, generating replicate-specific outputs (nvt.tpr, nvt.gro, nvt.cpt, nvt.edr) inside each replicate folder.
         
