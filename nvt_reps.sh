@@ -1,4 +1,5 @@
 #!/bin/bash
+
 ###############################################
 # SLURM ARRAY SETTINGS
 ###############################################
@@ -12,6 +13,7 @@
 #SBATCH --time=48:00:00                   # Max runtime
 #SBATCH --output=logs/%x_%A_%a.out        # Output log (jobname_jobID_arrayID.out)
 
+set -e
 ###############################################
 # LOAD REQUIRED MODULES
 ###############################################
@@ -29,6 +31,13 @@ module load gromacs-gpu                   # Load GROMACS (Laguna environment)
 # 2 → rep2
 # 3 → rep3
 REP=${SLURM_ARRAY_TASK_ID}
+
+if [ -z "$REP" ]; then
+    echo "ERROR: SLURM_ARRAY_TASK_ID is not set."
+    echo "Submit this script using: sbatch nvt_reps.sh"
+    echo "Do not run it with bash or ./nvt_reps.sh"
+    exit 1
+fi
 
 ###############################################
 # DEFINE RANDOM SEEDS FOR THIS REPLICATE
@@ -91,6 +100,13 @@ gmx_mpi grompp \
     -r em.gro \
     -p topol.top \
     -o rep${REP}/nvt.tpr
+    
+    
+# Check that tpr file was created
+if [ ! -f rep${REP}/nvt.tpr ]; then
+    echo "ERROR: nvt.tpr not created for rep${REP}"
+    exit 1
+fi
 
 ###############################################
 # RUN NVT SIMULATION
@@ -110,3 +126,4 @@ echo "========================================"
 echo "Finished NVT for replicate: rep${REP}"
 echo "End time: $(date)"
 echo "========================================"
+
