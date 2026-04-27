@@ -1,16 +1,16 @@
 #!/bin/bash
 
-#SBATCH --job-name=md_300ns_reps
+#SBATCH --job-name=ct173_150ns
 #SBATCH --partition=gpu
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=12
 #SBATCH --gres=gpu:l40s:1
 #SBATCH --mem=48G
-#SBATCH --time=7-00:00:00
+#SBATCH --time=120:00:00
 #SBATCH --array=1-3
-#SBATCH --output=logs/md_300ns_reps_%A_%a.out
-#SBATCH --error=logs/md_300ns_reps_%A_%a.err
+#SBATCH --output=md_array_%A_%a.out
+#SBATCH --error=md_array_%A_%a.err
 
 set -euo pipefail
 
