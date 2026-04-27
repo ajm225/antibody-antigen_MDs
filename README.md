@@ -224,8 +224,23 @@ Again, change to the correct working directory per replicate before running the 
 
  
 
- # 17. Start MD Run
-Run production MD separately for each replicate within its respective folder.
+ # 17. Start MD Run, using an array. Switch to 300ns/ folder (or to whatever parent folder is housing rep1/ rep2/ rep3/)
+Run production MD for all three replicates using a Slurm array script. This step should be run from the parent `300ns` folder, not from inside an individual replicate folder.
 
-    > gmx_mpi mdrun -deffnm md_300ns
+Each array task will enter the corresponding replicate folder:
+
+- task 1 → `rep1`
+- task 2 → `rep2`
+- task 3 → `rep3`
+
+and run the production MD using the preprocessed `md.tpr` file from Step 16.
+
+- Save the md.mdp script to the 300ns folder, as well as the md_300ns_array.sh script.
+- Check that all preprocessed files exist, e.g.:
+
+       > ls rep1/md.tpr rep2/md.tpr rep3/md.tpr
+  
+- Then, submit the job:
+  
+      > sbatch md_300ns_array.sh
 
