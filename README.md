@@ -107,23 +107,24 @@ Note that the random seeding for replicates becomes relevant after steps 0-8. Yo
 # 9. RANDOM SEED GENERATION FOLDER SET-UP: 
 - IMPORTANT: This step sets up the exact folder names for the different replicates so that you can keep track of per-repicate files after this step. You should have a primary folder with the files generated for the complex so far, followed by the individual folders (nested within the primary folder) for each replicate. See below for an example folder structure setup. 
 -     n_ct173_pep7-dk7-model0_MD/
-          em.gro
-          topol.top
-          index.ndx
-          topol_Protein_chain_H.itp
-          topol_Protein_chain_L.itp
-          topol_Protein_chain_A.itp
-          posre_Protein_chain_H.itp
-          posre_Protein_chain_L.itp
-          posre_Protein_chain_A.itp
-          nvt_template.mdp
-          npt.mdp
-          md.mdp
-          nvt_reps.sh
-    
-          rep1_300ns/
-          rep2_300ns/
-          rep3_300ns/
+           300ns/
+              em.gro
+              topol.top
+              index.ndx
+              topol_Protein_chain_H.itp
+              topol_Protein_chain_L.itp
+              topol_Protein_chain_A.itp
+              posre_Protein_chain_H.itp
+              posre_Protein_chain_L.itp
+              posre_Protein_chain_A.itp
+              nvt_template.mdp
+              npt.mdp
+              md.mdp
+              nvt_reps.sh
+        
+              rep1/
+              rep2/
+              rep3/
 
 
 # 10. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE using ARRAY) & run NVT. Use the nvt_template.mdp & nvt_randseed_reps.sh shell script attached, which now accomodates for random seed generation per replicate.
