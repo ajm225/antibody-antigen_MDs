@@ -105,7 +105,7 @@ Note that the random seeding for replicates becomes relevant after steps 0-8. Yo
 - Check on possible atomic clashes, if there are overlapping atoms the minimization will fail (if you see a high Fmax (>10⁵ kJ/mol·nm) you can move the moleucles a bit with gmc editconf with "gmx editconf -f sistema.gro -o sistema_shifted.gro -translate 0.1 0.1 0.1" this can separate the overlaping atoms). Verify the topology, verify if there are atoms with charges or incorrect radius, for example you have 5000 SOL molecules after gmx solvate, make sure that number is correct. Make sure the parameters of the forcefield are correct in the gmx pdb2gmx, correct all the warings in atoms or bonds before minimize.   
 
 # 9. RANDOM SEED GENERATION FOLDER SET-UP: 
-- IMPORTANT: This step sets up the exact folder names for the different replicates so that you can keep track of per-repicate files after this step. You should have a primary folder with the files generated for the complex so far, followed by the individual folders (nested within the primary folder) for each replicate. See below for an example folder structure setup. 
+- IMPORTANT: This step sets up the exact folder names for the different replicates so that you can keep track of per-repicate files after this step. You should have a primary folder with the files generated for the complex so far, followed by the individual folders (nested within the primary folder) for each replicate. Each replicate should have certain files copied into it for later steps (see below for a list). See below for an example folder structure setup. 
 -     n_ct173_pep7-dk7-model0_MD/
            300ns/
               em.gro
@@ -123,11 +123,38 @@ Note that the random seeding for replicates becomes relevant after steps 0-8. Yo
               nvt_reps.sh
         
               rep1/
+                  topol.top
+                  index.ndx
+                  topol_Protein_chain_H.itp
+                  topol_Protein_chain_L.itp
+                  topol_Protein_chain_A.itp
+                  posre_Protein_chain_H.itp
+                  posre_Protein_chain_L.itp
+                  posre_Protein_chain_A.itp
+                  npt.mdp
               rep2/
+                  topol.top
+                  index.ndx
+                  topol_Protein_chain_H.itp
+                  topol_Protein_chain_L.itp
+                  topol_Protein_chain_A.itp
+                  posre_Protein_chain_H.itp
+                  posre_Protein_chain_L.itp
+                  posre_Protein_chain_A.itp
+                  npt.mdp
               rep3/
+                  topol.top
+                  index.ndx
+                  topol_Protein_chain_H.itp
+                  topol_Protein_chain_L.itp
+                  topol_Protein_chain_A.itp
+                  posre_Protein_chain_H.itp
+                  posre_Protein_chain_L.itp
+                  posre_Protein_chain_A.itp
+                  npt.mdp
 
 
-# 10. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE using ARRAY) & run NVT. Use the nvt_template.mdp & nvt_randseed_reps.sh shell script attached, which now accomodates for random seed generation per replicate.
+# 10. Preprocessing NVT equilibrium (generate nvt input file nvt.tpr PER REPLICATE using ARRAY) & run NVT. Use the nvt_template.mdp & nvt_randseed_reps.sh shell script attached, which now accomodates for random seed generation per replicate. Run this from the 300ns folder, and it should place the files in each replicate folder, respectively.
 Note: This step should automatically place the files in the correct folders. 
 
 NVT is executed per replicate using the Slurm array script (nvt_reps.sh). Each array task runs grompp and mdrun for one replicate, generating replicate-specific outputs (nvt.tpr, nvt.gro, nvt.cpt, nvt.edr) inside each replicate folder.
