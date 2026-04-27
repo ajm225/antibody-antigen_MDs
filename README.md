@@ -217,7 +217,7 @@ Again, change to the correct working directory per replicate before running the 
 # 16. start MD run pre-processing PER REPLICATE
 Again, change to the correct working directory per replicate before running the command. 
 
-    > gmx_mpi grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md_0_1.tpr
+    > gmx_mpi grompp -f md.mdp -c npt.gro -t npt.cpt -p topol.top -o md.tpr
     > grep -E "SOL|NA|CL" topol.top 
 - (after the minimization you should check that the topology file contains the ions and water molecules yet. the amount of CL, NA ions and water SOL should remain the same before start the MD simulation)
 
