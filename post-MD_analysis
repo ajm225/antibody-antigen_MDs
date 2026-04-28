@@ -141,29 +141,30 @@ gmx cluster -s md_0_1.tpr -f cluster.xtc -o cluster.xpm -g cluster.log -cl clust
 
 __________________________
 ######### Generating PDB Snapshots of MD Run 
-  for t in {0..100000..1000}; do           #0..100000..1000 means from 0 to 100000ps every 1000ps of snapshot
-      gmx trjconv -s md_0_1.tpr -f md_0_1_noPBC.xtc -n index.ndx -o snapshot_${t}ps.pdb -dump $t
-  done
-     #then select the numbers to evaluate if you want the protein (1) or the system (0), etc
-#it is possible to also use this will print 1 or 17 or the needed number several times (the ones that you need)
-    for t in {0..100000..1000}; do
-        echo "Processing time $t ps...";
-        printf "17\n" | gmx trjconv -s md_0_1.tpr -f md_0_1_noPBC.xtc -n index.ndx -o snapshot_${t}ps.pdb -dump $t; done
-    done 
+NOTE: This section takes a PDB snapshot every 1000ps of an entire MD run. Depending on the simulation length, this part can take a significant amount of time. I started this process for a 150ns run, and it took over an hour. 
+
+      for t in {0..100000..1000}; do           #0..100000..1000 means from 0 to 100000ps every 1000ps of snapshot
+          gmx trjconv -s md_0_1.tpr -f md_0_1_noPBC.xtc -n index.ndx -o snapshot_${t}ps.pdb -dump $t
+      done
+         #then select the numbers to evaluate if you want the protein (1) or the system (0), etc
+
+#Combining all generated snapshots into one PDB #
 
 #this will generate different .pdb files that can be joint using is a single one using: 
-cat snapshot1.pdb snapshot2.pdb snapshot3.pdb > combined_snapshots.pdb
-#here is an automatic way to combine al the generated snapshots in one .pdb file:
+    cat snapshot1.pdb snapshot2.pdb snapshot3.pdb > combined_snapshots.pdb
 
-    output_file="combined_snapshots.pdb"
-    > $output_file  # Clear the output file if it exists
+#here is an automatic way to combine al the generated snapshots in one .pdb file, in order:
 
-    for pdb_file in snapshot_*ps.pdb; do
-        echo "Adding $pdb_file to $output_file..."
-        echo "MODEL $(basename $pdb_file .pdb | grep -o '[0-9]*')" >> $output_file
-        cat "$pdb_file" >> $output_file
-        echo "ENDMDL" >> $output_file
-    done
+ >        output_file="combined_snapshots.pdb"
+          > "$output_file"
+        
+        for pdb_file in $(ls snapshot_*ps.pdb | sort -V); do
+            echo "Adding $pdb_file to $output_file..."
+            echo "MODEL $(basename "$pdb_file" .pdb | grep -o '[0-9]*')" >> "$output_file"
+            cat "$pdb_file" >> "$output_file"
+            echo "ENDMDL" >> "$output_file"
+        done
+
 
 #If you upload each snapshot separatelly and combine them in pymol, then aligned them to generate a superimpose picture with all the snapshots
 #it seems there is no automatic way to do this, so you will have to do it manually in pymol or try to find a pymol script
@@ -174,29 +175,44 @@ cat snapshot1.pdb snapshot2.pdb snapshot3.pdb > combined_snapshots.pdb
 
 #####Interaction Analysis
 #you can just se the interaction_analysis.py file to generate the heatmaps of intercation and the index file for the analysis in gromacs
-#(pair wise analysis, minimun distance interaction and number of hydrogen bonds). 
+#(THIS IS NEEDED for pair wise analysis, minimun distance interaction and number of hydrogen bonds). 
 #for this analysis always use the md_0_1.xtc (it is going to be that file every time you want to generate a heatmail with MDAnalysis in python, do nto use the md_0_1_noPBC,xtc)
 #here you will generate a interacting_residues_cogs.ndx which is an index file that separates only the residues (for each protein) that are interacting between these 2 proteins
-#below an specific cutof porint (normaly below 5A), whit this index file oyu can perform the minimun distance, pariwise distance and number of hidrogen bonds analysis in GROMACS
+#below an specific cutof porint (normaly below 5A), with this index file you can perform the minimun distance, pariwise distance and number of hidrogen bonds analysis in GROMACS
+- Add the attached interaction_analysis.py file to your folder
+    - make sure you have all of the correct python libraries installed, this .py uses MDAnalysis
+- run the .py file, get out the interacting_residues_cogs.ndx
+    > python interaction_analysis.py
 
-#minimun distance 
-gmx mindist -s md_0_1.tpr -f md_0_1.xtc -n interacting_residues_cogs.ndx -od mindist.xvg -on num_contact.xvg -d 0.5
+# Example output: 
+    Interacting Antibody residues: 46
+    Interacting Antigen residues: 21
+    Output written to: interacting_residues_cogs.ndx
+
+
+#minimun distance - What is the closest contact at each time?
+gmx_mpi mindist -s md_rep1.tpr -f md_rep1.xtc -n interacting_residues_cogs.ndx -od mindist.xvg -on num_contact.xvg -d 0.5
      #the interacting_residues_cogs.ndx is the ndx file generated in the interaction_analysis.py, the -d is the distance in nm
 
-#pairwise distance
-gmx pairdist -s md_0_1.tpr -f md_0_1.xtc -n interacting_residues_cogs.ndx -o pairdist.xvg -ref Interacting_Protein1 -sel Interacting_Protein2
+#pairwise distance - How far are these selected interface groups from each other over time?
+gmx_mpi pairdist -s md_rep1.tpr -f md_rep1.xtc -n interacting_residues_cogs.ndx -o pairdist.xvg -ref Interacting_Protein1 -sel Interacting_Protein2
      #-ref Interacting_Protein1 -sel Interacting_Protein2 were determined in interacting_residues_cogs.ndx
 
-#Hidrogen bonds
-gmx hbond -s md_0_1.tpr -f md_0_1_noPBC1.xtc -n interacting_residues_cogs.ndx -num hbondsnew.xvg
+#Hydrogen bonds
+gmx_mpi hbond -s md_rep1.tpr -f rep1_noPBC.xtc -n interacting_residues_cogs.ndx -num hbondsnew.xvg
      #this tells you the number of hidrogen bonds present in the interactions. 
+    
+    #You will be prompted to enter a selection for a reference 'r' and target 't': 
+    # For 'r': Interacting_Protein1
+    # For 't': Interacting_Protein2
 
 #It is posible to perform a salt bridge analysis, the code is in interaction_analysis.py
 
 
 #secondary structure analysis
-gmx dssp -f md_0_1.xtc -s md_0_1.tpr -o structure.xvg -num numstruc.xvg
+gmx_mpi dssp -f md_rep1.xtc -s md_rep1.tpr -o structure.dat -num numstruc.xvg
     #This will generate a .dat file that wil be used in the python script to generate the secondary structure map to see the change of secondary structures along time
+# Note: to run this, you will likely have to download the module for "dssp" if you don't already have it. I had to create an entire python environment and use "conda" to install dssp
 
 #MMPBSA analysis 
    #First the groups have to be wel deifned in the index file
