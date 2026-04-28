@@ -214,8 +214,14 @@ gmx_mpi dssp -f md_rep1.xtc -s md_rep1.tpr -o structure.dat -num numstruc.xvg
     #This will generate a .dat file that wil be used in the python script to generate the secondary structure map to see the change of secondary structures along time
 # Note: to run this, you will likely have to download the module for "dssp" if you don't already have it. I had to create an entire python environment and use "conda" to install dssp
 
+
+
+
+///MMPBSA: Molecular Mechanics – Poisson–Boltzmann Surface Area
+# post-processing method used after MD simulations to estimate binding free energy (ΔG_bind) between two molecules 
+
 #MMPBSA analysis 
-   #First the groups have to be wel deifned in the index file
+   #First the groups have to be well defined in the index file (MAKE SURE YOU'VE DONE EVERYTHING PRIOR TO THIS TIL THIS POINT)
 
 module load gromacs
 module load gmx_mmpbsa
@@ -230,8 +236,8 @@ gmx_MMPBSA -i mmpbsa.in -cs md_0_1.tpr -ct md_0_1.xtc -ci indexfinal3.ndx -cg 17
 #for now it seems it only works with leaprc.protein.ff14SB forcefield, I could not run it with AMBER or Amber99SB-ILDN forcefields, maybe try Amber
 
 
-///MMPBSA: Molecular Mechanics – Poisson–Boltzmann Surface Area
-# post-processing method used after MD simulations to estimate binding free energy (ΔG_bind) between two molecules 
+
+
 
 1. Set up environment (create an mmpbsa environment first if it doesnt exist)
 - module purge
@@ -240,49 +246,24 @@ gmx_MMPBSA -i mmpbsa.in -cs md_0_1.tpr -ct md_0_1.xtc -ci indexfinal3.ndx -cg 17
 - module load gromacs-gpu/2024.3
 - conda activate mmmpbsa_env
 
-2. Creat MM/PBSA Index File (not in conda env yet)
-- gmx_mpi make_ndx -f md_0_1.tpr -o index_mmpbsa.ndx
+2. Using your previously made index.ndx file, you will need to create a modified version of it containing only the groups you need for MMPBSA (antibody and antigen)
+- gmx_mpi make_ndx -f md_rep1.tpr -n index.ndx -o index_mmpbsa.ndx
+    - use 'del' to remove all other groups than [Antigen] & [Antibody]
 
-Output:
+# create your mmpbsa.in file 
+    gmx_MMPBSA --create_input gb
+    output: mmpbsa.in
 
-Command line:
-  gmx_mpi make_ndx -f md_0_1.tpr -o index_mmpbsa.ndx
+      gmx_MMPBSA \
+          -i mmpbsa.in \
+          -cs md_rep1.tpr \
+          -ct md_rep1.xtc \
+          -ci index_mmpbsa.ndx \ #use new index file you made
+          -cg 1 0 \              # these numbers correspond to your [Antigen] & [Antibody] groups
+          -o results_mmpbsa.dat \
+          -eo results_mmpbsa.csv  
 
-
-Reading structure file
-Reading file md_0_1.tpr, VERSION 2024.3 (single precision)
-Reading file md_0_1.tpr, VERSION 2024.3 (single precision)
-Going to read 0 old index file(s)
-Analysing residue names:
-There are:   275    Protein residues
-There are: 57151      Water residues
-There are:   327        Ion residues
-Analysing Protein...
-
-  0 System              : 175937 atoms
-  1 Protein             :  4157 atoms
-  2 Protein-H           :  2127 atoms
-  3 C-alpha             :   275 atoms
-  4 Backbone            :   825 atoms
-  5 MainChain           :  1103 atoms
-  6 MainChain+Cb        :  1352 atoms
-  7 MainChain+H         :  1373 atoms
-  8 SideChain           :  2784 atoms
-  9 SideChain-H         :  1024 atoms
- 10 Prot-Masses         :  4157 atoms
- 11 non-Protein         : 171780 atoms
- 12 Water               : 171453 atoms
- 13 SOL                 : 171453 atoms
- 14 non-Water           :  4484 atoms
- 15 Ion                 :   327 atoms
- 16 Water_and_ions      : 171780 atoms
-
- nr : group      '!': not  'name' nr name   'splitch' nr    Enter: list groups
- 'a': atom       '&': and  'del' nr         'splitres' nr   'l': list residues
- 't': atom type  '|': or   'keep' nr        'splitat' nr    'h': help
- 'r': residue              'res' nr         'chain' char
- "name": group             'case': case sensitive           'q': save and quit
- 'ri': residue index
+#for now it seems it only works with leaprc.protein.ff14SB forcefield, I could not run it with AMBER or Amber99SB-ILDN forcefields, maybe try Amber
 
 
 
