@@ -8,7 +8,7 @@
      module load gcc
      module load gromacs-gpu
 
-# per replicate, do the following create an analysis folder
+# per replicate, create an analysis folder
      mkdir -p Analysis
 
 ## analysis of trajectory files, select "protein" for all commands"
@@ -18,69 +18,63 @@ module load gcc/12.3.0 gromacs-gpu/2024.3
 ## per replicate:
      gmx_mpi trjconv -s md_rep1.tpr -f md_rep1.xtc -o Analysis/rep1_noPBC.xtc -pbc cluster -center
 
-## set atom range numbers instead or residues (since residues restart from 1 everytime)
-e.g. 
-    > a 1-1795
-    
-    Found 1795 atoms in range 1-1795
-    
-    > name 17 Heavy
+## the following command will look at the structural stability, choose backbone (option 4) for least squeare fit and RMSD calculation
+    gmx_mpi rms -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd.xvg -tu ns
+    gmx_mpi rms -s em.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd_xtal.xvg -tu ns
+    gmx_mpi rmsf -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsf.xvg
 
-
-
-
-## the following command will look at the structural stability, choose backbone (optin 4) for least squeare fit and RMSD calculation
-> gmx_mpi rms -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd.xvg -tu ns
-> gmx_mpi rms -s em.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsd_xtal.xvg -tu ns
-> gmx_mpi rmsf -s md_0_1.tpr -f Analysis/md_0_1_noPBC.xtc -o Analysis/rmsf.xvg
-## per replicate:
-> gmx_mpi rms -s md_rep1.tpr -f Analysis/rep1_noPBC.xtc -o Analysis/rmsd.xvg -tu ns
-> gmx_mpi rms -s em.tpr -f Analysis/rep1_noPBC.xtc -o Analysis/rmsd_xtal.xvg -tu ns
-> gmx_mpi rmsf -s md_rep1.tpr -f Analysis/rep1_noPBC.xtc -o Analysis/rmsf.xvg
-
-
-
-##generating differnet index files to analyze RMSD and RMSF separatelly 
-> gmx_mpi make_ndx -f md_0_1.gro -o Analysis/index.ndx 
+## generating different index files to analyze RMSD and RMSF separatelly 
+    gmx_mpi make_ndx -f md_0_1.gro -o Analysis/index.ndx 
 ## per replicate
-> gmx_mpi make_ndx -f md_rep1.gro -o Analysis/index.ndx 
+    gmx_mpi make_ndx -f md_rep1.gro -o Analysis/index.ndx 
 
-#Review .gro file and atom numbering to select for proper index of protein 1 and protein 2, "a" for atom or "r" for residue
-#Press "q" to save and quit
-    #name protein1
-    #a 101-200
-    #name protein2
-    #a 500-5600
-gmx_mpi select -f md_0_1.gro -n Analysis/index.ndx
-gmx_mdmat -f Analysis/md_0_1_noPBC.xtc -s md_0_1.gro -n Analysis/index.ndx  -mean Analysis/contact_map.xpm -no contact_map.xvg #choos 4 backbone for this
+## set atom range numbers instead or residues (since residues restart from 1 everytime) by examining the original .gro file
+# Review .gro file and atom numbering to select for proper index of protein 1 and protein 2, "a" for atom or "r" for residue (choose atoms)
+    e.g. 
+          a 1-1795
+          name 17 Heavy
+          Found 1795 atoms in range 1-1795
+  # Press q to save and quit
+   #Press "q" to save and quit
+       #name protein1
+       #a 101-200
+       #name protein2
+       #a 500-5600
+   
+
+# Generate contact maps, per replicate
+    gmx_mpi select -f md_rep1.gro -n Analysis/index.ndx
+    
+    #choose 4 backbone for this:
+    gmx_mpi mdmat -f Analysis/rep1_noPBC.xtc -s md_rep1.gro -n Analysis/index.ndx -mean Analysis/contact_map.xpm -no contact_map.xvg 
+   
+
+
+## get representative PDB from a number of frames from trajectory file
+## analyze cluster from cluster.log and get frames, choose protein (1) as output
+    gmx_mpi trjconv -f Analysis/md_0_1_noPBC.xtc -s md_0_1.tpr -o snapshots_cluster1.pdb -b 27200 -e 100000
 
 # per replicate
-> gmx_mpi select -f md_rep1.gro -n Analysis/index.ndx
-> gmx_mpi mdmat -f Analysis/rep1_noPBC.xtc -s md_rep1.gro -n Analysis/index.ndx -mean Analysis/contact_map.xpm -no contact_map.xvg #choos 4 backbone for this
+    gmx_mpi trjconv -f Analysis/rep1_noPBC.xtc -s md_rep1.tpr -o snapshots_cluster1.pdb -b 27200 -e 100000
 
 
-## get representative PDB from a number of frames from trajectory file##, analyze cluster from cluster.log and get frames, choose protein (1) as output
-gmx_mpi trjconv -f Analysis/md_0_1_noPBC.xtc -s md_0_1.tpr -o snapshots_cluster1.pdb -b 27200 -e 100000
-
+## get one single pdb from a specific frame, this example at frame 100 000
+    gmx_mpi trjconv -f Analysis/md_0_1_noPBC.xtc -s md_0_1.tpr -o snapshots_cluster1_pdb.pdb -dump 100000
 # per replicate
-> gmx_mpi trjconv -f Analysis/rep1_noPBC.xtc -s md_rep1.tpr -o snapshots_cluster1.pdb -b 27200 -e 100000
+    gmx_mpi trjconv -f Analysis/rep1_noPBC.xtc -s md_rep1.tpr -o snapshots_cluster1_pdb.pdb -dump 100000
 
 
-##get one single pdb from a specific frame, this example at frame 100 000
-gmx_mpi trjconv -f Analysis/md_0_1_noPBC.xtc -s md_0_1.tpr -o snapshots_cluster1_pdb.pdb -dump 100000
-
-# per replicate
-> gmx_mpi trjconv -f Analysis/rep1_noPBC.xtc -s md_rep1.tpr -o snapshots_cluster1_pdb.pdb -dump 100000
-
-
-##analysing RMSD and RMSF separately using the index file
-    #this only works to generate hte RMSD of each protein, it will not work for the entire complex
-gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o fitted.xtc -pbc mol -center
-    #select system (group 0) and then protein (group 1)
-gmx_mpi rms -s model.pdb -f fitted.xtc -n index.ndx -o rmsd_protein1.xvg -tu ns
-    #select your protein from the index (protein 1 and protein 2)
-gmx_mpi rmsf -s md_0_1.tpr -f md_0_1_noPBC1.xtc -n index.ndx -o rmsf_protein1.xvg
-    #select your protein from the index (protein 1 and protein 2)
+## analysing RMSD and RMSF separately using the index file
+     #This only works to generate the RMSD of each protein, it will not work for the entire complex
+           gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o fitted.xtc -pbc mol -center
+               #select system (group 0) and then protein (group 1)
+     
+           (#this was the last command you ran 5/6) gmx_mpi rms -s md.tpr -f fitted.xtc -n Analysis/index.ndx -o rmsd_antibody.xvg -tu ns
+               #select your protein from the index (protein 1 and/or protein 2)
+               # start with antibody for both least mean squares and RMSD (e.g. protein 1)
+           
+           gmx_mpi rmsf -s md_0_1.tpr -f md_0_1_noPBC1.xtc -n index.ndx -o rmsf_protein1.xvg
+               #select your protein from the index (protein 1 and protein 2)
 
 
 
