@@ -3,7 +3,6 @@
 #RMSD = Root Mean Square Deviation => Overall structural deviation over time compared to a reference structure (time vs deviation)
 #RMSF = Per-residue flexibility over the trajectory (residue index vs fluctuation)
 
- 
      module load fftw
      module load gcc
      module load gromacs-gpu
@@ -13,9 +12,9 @@
 
 ## analysis of trajectory files, select "protein" for all commands"
 module load gcc/12.3.0 gromacs-gpu/2024.3
-
+   ## per replicate 
      gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o Analysis/md_0_1_noPBC.xtc -pbc cluster -center
-## per replicate:
+## EXAMPLE: per replicate (this is the same command, just here for demonstrating file name differences)
      gmx_mpi trjconv -s md_rep1.tpr -f md_rep1.xtc -o Analysis/rep1_noPBC.xtc -pbc cluster -center
 
 ## the following command will look at the structural stability, choose backbone (option 4) for least squeare fit and RMSD calculation
@@ -65,7 +64,7 @@ module load gcc/12.3.0 gromacs-gpu/2024.3
 
 
 ## analysing RMSD and RMSF separately using the index file
-     #This only works to generate the RMSD of each protein, it will not work for the entire complex
+     #This only works to generate the RMSD of each protein, it will not work for the entire complex, so run this for the antibody once, and then the antigen once
            gmx_mpi trjconv -s md_0_1.tpr -f md_0_1.xtc -o fitted.xtc -pbc mol -center
                #select system (group 0) and then protein (group 1)
      
